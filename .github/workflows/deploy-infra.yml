@@ -1,0 +1,47 @@
+name: Terraform apply infra change
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+    dev:
+        name: dev
+        runs-on: ubuntu-latest
+        steps:
+         - run: echo "running dev stage"
+    sample:
+        uses: ./.github/workflows/site-cd-workflow.yml
+        with:
+            working-directory: dev/sample
+        secrets: inherit
+        needs: [dev]
+    qa:
+        name: qa
+        needs: [dev,sample]
+        runs-on: ubuntu-latest
+        steps:
+         - run: echo "running qa stage"
+    seattle:
+        uses: ./.github/workflows/site-cd-workflow.yml
+        with:
+            working-directory: qa/seattle
+        secrets: inherit
+        needs: [qa]
+    prod:
+        name: prod
+        needs: [qa,seattle]
+        runs-on: ubuntu-latest
+        steps:
+         - run: echo "running prod stage"
+    Chicago:
+        uses: ./.github/workflows/site-cd-workflow.yml
+        with:
+            working-directory: prod/Chicago
+        secrets: inherit
+        needs: [prod]
